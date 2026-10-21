@@ -12,6 +12,7 @@ import java.sql.Statement;
 
 @ApplicationScoped
 public class LegacyDatabase {
+    private static final org.jboss.logging.Logger LOG = org.jboss.logging.Logger.getLogger(LegacyDatabase.class);
     private static final String DB_URL = System.getenv().getOrDefault("AUTH_DB_URL", "jdbc:sqlite:./data/workshop.db");
 
     @PostConstruct
@@ -24,7 +25,7 @@ public class LegacyDatabase {
                 statement.executeUpdate("INSERT OR IGNORE INTO legacy_users(username,password,display_name,role) VALUES ('trainer','Trainer123!','Workshop Trainer','TRAINER')");
             }
         } catch (Exception error) {
-            error.printStackTrace();
+            LOG.warn("Database initialization failed");
         }
     }
 
@@ -37,7 +38,7 @@ public class LegacyDatabase {
                 return new UserRecord(result.getLong("id"), result.getString("username"), result.getString("display_name"), result.getString("role"));
             }
         } catch (Exception error) {
-            error.printStackTrace();
+            LOG.warn("Authentication lookup failed");
         }
         return null;
     }
