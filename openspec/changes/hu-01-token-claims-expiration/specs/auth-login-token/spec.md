@@ -12,11 +12,11 @@ El servicio SHALL incluir los claims `sub`, `client`, `iat` y `exp` en cada toke
 
 ### Requirement: El cliente del request se valida y se refleja
 
-El servicio SHALL validar el campo `client` del body JSON antes de emitir un token, y el claim `client` SHALL corresponder al valor validado de esa solicitud.
+El servicio SHALL aceptar unicamente el cliente `angular-workshop` en el campo `client` del body JSON antes de emitir un token, y el claim `client` SHALL corresponder al valor aceptado de esa solicitud.
 
-#### Scenario: Cliente aceptado aparece en el token
+#### Scenario: Cliente angular-workshop aparece en el token
 
-- GIVEN una solicitud con credenciales validas y un valor `client` aceptado
+- GIVEN una solicitud con credenciales validas y `client` igual a `angular-workshop`
 - WHEN el servicio emite el token
 - THEN el claim `client` refleja ese valor validado
 
@@ -51,13 +51,14 @@ El servicio SHALL rechazar la autenticacion con credenciales invalidas y el camb
 - THEN el login no se considera exitoso ni se entrega un token autenticado
 - AND la prueba no presupone un status HTTP ni una forma de error no documentados
 
-### Requirement: Los tokens expirados no autentican
+### Requirement: El backend emite expiracion y delega su validacion al consumidor
 
-El servicio SHALL rechazar un token una vez superado su claim `exp`, y SHALL incluir una prueba de token expirado. La representacion HTTP del rechazo SHALL seguir el contrato existente y no se concreta aquí.
+El servicio SHALL incluir `exp` en cada JWT emitido. Este cambio SHALL NOT agregar una frontera que valide tokens recibidos; el servicio consumidor que valida la firma SHALL rechazar tokens una vez superado `exp`.
 
-#### Scenario: Token expirado
+#### Scenario: La emision no incorpora un validador de tokens
 
-- GIVEN un token cuyo instante `exp` ya ha pasado
-- WHEN se valida para autenticar una solicitud
-- THEN la autenticacion se rechaza
-- AND la prueba no presupone un status HTTP ni un cuerpo de error no documentados
+- GIVEN el backend no contiene una frontera de autenticacion para solicitudes con bearer token
+- WHEN se implementa la emision de JWT en este cambio
+- THEN el backend emite el claim `exp`
+- AND no agrega un endpoint ni filtro de validacion
+- AND el consumidor es responsable de rechazar tokens expirados

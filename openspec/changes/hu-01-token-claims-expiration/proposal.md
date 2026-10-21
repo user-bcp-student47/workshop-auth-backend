@@ -6,21 +6,22 @@ Trabajo comprometido: [GitHub Issue #10](https://github.com/user-bcp-student47/w
 
 ## Why
 
-El login emite tokens que representan una sesion autenticada. Claims minimos verificables y una expiracion coherente permiten identificar al sujeto y al cliente, y detectar tokens vencidos sin depender de supuestos del consumidor. La configuracion del secreto y la redaccion de logs reducen el riesgo de exponer credenciales o material de firma.
+El login emite tokens que representan una sesion autenticada. Claims minimos verificables y una expiracion coherente permiten identificar al sujeto y al cliente; el servicio consumidor debe validar la firma y rechazar tokens vencidos. La configuracion del secreto y la redaccion de logs reducen el riesgo de exponer credenciales o material de firma.
 
 ## Scope
 
 - Exigir `sub`, `client`, `iat` y `exp` en los tokens de login exitoso.
 - Validar el campo `client` recibido en el body y reflejar el valor validado en el token.
 - Devolver `expiresIn` coherente con `exp - now`, con una tolerancia documentada.
-- Cubrir login valido, credenciales invalidas y token expirado con pruebas.
+- Cubrir login valido, credenciales invalidas, cliente rechazado y claims de expiracion emitidos con pruebas. La validacion y el rechazo efectivo de tokens expirados pertenecen al consumidor y no se implementan aqui.
 - Evitar registrar tokens, secretos y otros valores sensibles.
-- Asegurar que un secreto por defecto sea exclusivo del sandbox y este documentado como tal, o que no se use fuera de ese entorno.
-- Documentar la decision entre conservar HMAC o adoptar una libreria JWT y su justificacion, sin preseleccionar aqui ninguna alternativa.
+- Obtener el secreto de firma de configuracion por entorno, sin secreto por defecto.
+- Usar una libreria JWT mantenida y compatible con Quarkus; documentar la eleccion y su justificacion.
 
 ## Out of scope
 
-- Elegir ahora HMAC o una libreria JWT, definir algoritmos, dependencias, formato interno o arquitectura de validacion.
+- Agregar un endpoint, filtro u otra frontera de validacion de tokens en este repositorio; el consumidor debe aplicar la validacion de expiracion.
+- Modificar otros repositorios o afirmar compatibilidad con consumidores no verificados.
 - Cambiar el endpoint, los campos existentes del request o la forma de manejar errores HTTP.
 - Rediseñar el almacenamiento de sesion del frontend, agregar refresh/revocacion, modificar la API de tareas o ampliar el esquema de `user`.
 - Especificar codigos HTTP o cuerpos de error que `docs/ENDPOINTS.md` deja como preguntas abiertas.
@@ -34,9 +35,9 @@ El Issue #10 cambia el contrato de respuesta al requerir `expiresIn`, que el bas
 
 ## Capabilities
 
-- `auth-login-token`: claims, validacion de `client`, expiracion y compatibilidad del contrato de login.
-- `auth-token-protection`: manejo de `AUTH_TOKEN_SECRET`, logs redactados y registro de la decision HMAC/JWT.
+- `auth-login-token`: claims emitidos, allowlist de `client`, expiracion y compatibilidad del contrato de login.
+- `auth-token-protection`: manejo de `AUTH_TOKEN_SECRET`, logs redactados y decision de libreria JWT.
 
 ## Impact
 
-El cambio afecta el contrato de `POST /auth/login`, la configuracion/documentacion de `AUTH_TOKEN_SECRET`, las pruebas de autenticacion y la evidencia de logs. No prescribe la implementacion tecnica. Los consumidores que ya usan `token` y `user` deben continuar funcionando; `expiresIn` se incorpora como dato adicional.
+El cambio afecta el contrato de `POST /auth/login`, la configuracion/documentacion de `AUTH_TOKEN_SECRET`, las pruebas de autenticacion y la evidencia de logs. Se cambia el formato opaco heredado por un JWT HS256; `expiresIn` se incorpora como dato adicional. La compatibilidad de validadores no inspeccionados debe confirmarse antes del despliegue.
